@@ -13,12 +13,13 @@ class QuestionViewController: UIViewController {
     
     @IBOutlet weak var headerLabel: UILabel!
     @IBOutlet weak var tableView: UITableView!
+    
     private var question = ""
     private var options = [String]()
-    private var selection: ((String) -> Void)? = nil
+    private var selection: (([String]) -> Void)? = nil //the quizz allows multiple choices
     private let cellIdentifier = "Cell"
     
-    convenience init(question: String, options: [String], selection: @escaping (String) -> Void) {
+    convenience init(question: String, options: [String], selection: @escaping ([String]) -> Void) {
         self.init()
         self.question = question
         self.options = options
@@ -29,6 +30,7 @@ class QuestionViewController: UIViewController {
         super.viewDidLoad()
         headerLabel.text = question
         tableView.delegate = self
+        tableView.dataSource = self
     }
 }
 
@@ -52,7 +54,18 @@ extension QuestionViewController: UITableViewDataSource {
 }
 
 extension QuestionViewController: UITableViewDelegate {
+    private func selectedOptions(in tableView: UITableView) -> [String] {
+        guard let indexPath = tableView.indexPathsForSelectedRows else { return [] }
+        return indexPath.map { options[$0.row] }
+    }
+    
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        selection?(options[indexPath.row])
+        selection?(selectedOptions(in: tableView))
+    }
+    
+    func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
+        if tableView.allowsMultipleSelection {
+            selection?(selectedOptions(in: tableView))
+        }
     }
 }
